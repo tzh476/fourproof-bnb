@@ -18,7 +18,7 @@ The product's central bet is that discovery without evidence is not a marketplac
 
 ## Prototype stage
 
-Working local MVP. Public deployment, wallet-owned activation, public repository, and contest submission are still pending.
+Working MVP with a public source repository. Public deployment, wallet-owned activation, and contest submission are still pending.
 
 ## BNB integration
 

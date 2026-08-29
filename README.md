@@ -11,7 +11,7 @@ The differentiator is a strict trust boundary. Agent descriptions are treated as
 
 ## Current status
 
-This is a local, working MVP. It has not been publicly deployed, registered as a hackathon submission, connected to a user wallet, or awarded any prize. USD 0 has been received.
+This is a working MVP with public source at `https://github.com/tzh476/fourproof-bnb`. It has not been publicly deployed, registered as a hackathon submission, connected to a user wallet, or awarded any prize. USD 0 has been received.
 
 Implemented:
 
@@ -30,7 +30,7 @@ Still required before a truthful contest submission:
 - exercise the four-category journey against live agents and archive evidence;
 - resolve and validate real public A2A execution targets, then add a user-confirmed ERC-8183 activation path without exposing private keys;
 - complete wallet-owned onchain actions and any testnet/mainnet transactions;
-- create a public GitHub repository and demo video;
+- record a demo video;
 - have the applicant personally accept the contest terms and submit the form.
 
 ## Run locally
