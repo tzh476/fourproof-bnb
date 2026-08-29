@@ -18,7 +18,7 @@ The product's central bet is that discovery without evidence is not a marketplac
 
 ## Prototype stage
 
-Working MVP with a public source repository. Public deployment, wallet-owned activation, and contest submission are still pending.
+Working MVP with a public source repository and live Cloudflare Pages deployment at `https://fourproof-bnb.pages.dev`. Wallet-owned registration or activation and contest submission are still pending.
 
 ## BNB integration
 
@@ -26,7 +26,7 @@ Working MVP with a public source repository. Public deployment, wallet-owned act
 - Canonical Identity Registry `0x8004a169fb4a3325136eb29fa0ceb6d2e539a432`.
 - Live `ownerOf` and `tokenURI` reads via BSC RPC.
 - BscScan links for identities and registration transactions.
-- Four first-party deterministic A2A reference services, ready for public deployment and applicant-signed ERC-8004 registration.
+- Four publicly deployed first-party deterministic A2A reference services; applicant-signed ERC-8004 registration remains pending.
 - Future user-wallet activation through the official BNB Agent SDK / ERC-8183 stack after an explicit transaction review.
 
 ## Claims we do not make
@@ -41,7 +41,5 @@ Working MVP with a public source repository. Public deployment, wallet-owned act
 - Telegram handle;
 - X handle;
 - wallet address;
-- public GitHub repository URL;
-- public demo URL;
 - participation-terms acceptance;
 - final submission.

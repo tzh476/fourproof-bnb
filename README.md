@@ -11,7 +11,7 @@ The differentiator is a strict trust boundary. Agent descriptions are treated as
 
 ## Current status
 
-This is a working MVP with public source at `https://github.com/tzh476/fourproof-bnb`. It has not been publicly deployed, registered as a hackathon submission, connected to a user wallet, or awarded any prize. USD 0 has been received.
+This is a working MVP with public source at `https://github.com/tzh476/fourproof-bnb` and a live demo at `https://fourproof-bnb.pages.dev`. It has not been registered as a hackathon submission, connected to a user wallet, registered as an ERC-8004 identity, or awarded any prize. USD 0 has been received.
 
 Implemented:
 
@@ -26,8 +26,6 @@ Implemented:
 
 Still required before a truthful contest submission:
 
-- deploy the frontend to a public URL;
-- exercise the four-category journey against live agents and archive evidence;
 - resolve and validate real public A2A execution targets, then add a user-confirmed ERC-8183 activation path without exposing private keys;
 - complete wallet-owned onchain actions and any testnet/mainnet transactions;
 - record a demo video;
@@ -85,7 +83,7 @@ GET  /agents/health-factor/.well-known/agent-card.json
 POST /agents/health-factor/a2a
 ```
 
-They are deployment-ready but are not represented as BSC identities until the applicant deploys them and personally signs ERC-8004 registration transactions. The UI therefore does not present them as registered or operational.
+They are publicly deployed under `https://fourproof-bnb.pages.dev/agents/`, but they are not represented as BSC identities until the applicant personally signs ERC-8004 registration transactions. The UI therefore does not present them as registered or operational.
 
 ## Security and financial boundary
 
