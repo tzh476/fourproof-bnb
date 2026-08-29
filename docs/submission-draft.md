@@ -36,10 +36,33 @@ Working MVP with a public source repository and live Cloudflare Pages deployment
 - A healthy AgentCard does not prove execution health or output quality.
 - No prize, customer, revenue, or payment exists.
 
+## Form-ready answers
+
+These answers mirror the live Google Form inspected on 2026-08-29. They exclude contact details, wallet data, personal experience claims, availability, and agreement choices.
+
+| Form field | Draft answer |
+| --- | --- |
+| How did you hear about this hackathon? | BNB Chain Website |
+| Solo or team | Solo |
+| Number of teammates | 1 (Solo) |
+| Project name | FourProof |
+| One-line pitch | An evidence-first BNB agent marketplace that separates identity, discovery health, and execution readiness across all four required DeFi categories before an agent gets near a wallet. |
+| Project description | Use the three paragraphs under **Project description** above. |
+| Sub-prize tracks | Not sure. Do not select a partner track unless the implementation actually satisfies that partner's published requirements. |
+| GitHub repository | https://github.com/tzh476/fourproof-bnb |
+| Prototype stage | Working MVP |
+| Public demo | https://fourproof-bnb.pages.dev |
+
+The current form does not provide a separate public-demo field. The repository README links the live deployment so reviewers can reach it from the required GitHub field.
+
 ## Remaining form fields owned by the applicant
 
+- Google account login and recorded-email choice;
+- full name, email, country/timezone, and any optional Discord handle;
 - Telegram handle;
 - X handle;
+- BSC/EVM experience level and personal skills;
+- mentorship preference and availability confirmation;
 - wallet address;
 - participation-terms acceptance;
 - final submission.
