@@ -28,6 +28,8 @@ export function agentFixture(overrides: Partial<AgentDetail> = {}): AgentDetail 
         endpoint: "https://agent.example/a2a",
         executionEndpoint: "https://agent.example/a2a/messages",
         executionTargetVerified: true,
+        executionIdentityVerified: true,
+        executionCheckedAt: "2026-08-29T00:00:30Z",
         status: "healthy",
         message: "Healthy AgentCard",
         checkedAt: "2026-08-29T00:00:00Z",

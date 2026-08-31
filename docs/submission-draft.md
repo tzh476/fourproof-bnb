@@ -1,4 +1,6 @@
-# Build the Era submission draft — not submitted
+# Build the Era submission record and current project copy
+
+A project-bearing Google Forms response receipt has been verified. This file preserves reusable project copy; it is not evidence of shortlist, award, or payment.
 
 ## Project name
 
@@ -12,13 +14,13 @@ An evidence-first BNB agent marketplace that separates identity, discovery healt
 
 FourProof turns BSC's large ERC-8004 agent registry into a usable, falsifiable marketplace. It discovers agents in portfolio rebalancing, grid trading, yield optimisation, and health-factor monitoring with equal depth. Each candidate receives an evidence score built from canonical BSC registration, A2A/MCP support, scanner-observed discovery health, domain evidence, execution-target checks, metadata completeness, wallet publication, and feedback—not promotional claims.
 
-Users can inspect the exact registry token, owner, registration transaction, discovery URL, health-check timestamp, and blocking reasons. A direct BSC read verifies `ownerOf` and `tokenURI` independently of the indexer. Only candidates that also pass domain and execution-target checks can produce a bounded activation plan; the MVP plan is explicitly read-only, non-custodial, non-trading, and expires after 30 minutes.
+Users can inspect the exact registry token, owner, registration transaction, discovery URL, health-check timestamp, and blocking reasons. A direct BSC read verifies `ownerOf` and `tokenURI` independently of the indexer. Only candidates that pass a fresh BSC owner read and return a registry-bound response from a safe public A2A target can produce a bounded activation plan; the MVP plan is explicitly read-only, non-custodial, non-trading, and expires after 30 minutes.
 
 The product's central bet is that discovery without evidence is not a marketplace: it is a directory. FourProof makes missing evidence visible and makes unsafe optimism impossible to hide behind a polished agent description.
 
 ## Prototype stage
 
-Working MVP with a public source repository and live Cloudflare Pages deployment at `https://fourproof-bnb.pages.dev`. Wallet-owned registration or activation and contest submission are still pending.
+Working submitted MVP with a public source repository and live Cloudflare Pages deployment at `https://fourproof-bnb.pages.dev`. The submission receipt is verified; review, shortlist, award, and payment remain unconfirmed.
 
 ## BNB integration
 
@@ -26,6 +28,7 @@ Working MVP with a public source repository and live Cloudflare Pages deployment
 - Canonical Identity Registry `0x8004a169fb4a3325136eb29fa0ceb6d2e539a432`.
 - Live `ownerOf` and `tokenURI` reads via BSC RPC.
 - BscScan links for identities and registration transactions.
+- Safe same-origin A2A capability probe that binds the response to the selected ERC-8004 token and published agent wallet.
 - Four publicly deployed first-party deterministic A2A reference services; applicant-signed ERC-8004 registration remains pending.
 - Future user-wallet activation through the official BNB Agent SDK / ERC-8183 stack after an explicit transaction review.
 
@@ -55,14 +58,4 @@ These answers mirror the live Google Form inspected on 2026-08-29. They exclude 
 
 The current form does not provide a separate public-demo field. The repository README links the live deployment so reviewers can reach it from the required GitHub field.
 
-## Remaining form fields owned by the applicant
-
-- Google account login and recorded-email choice;
-- full name, email, country/timezone, and any optional Discord handle;
-- Telegram handle;
-- X handle;
-- BSC/EVM experience level and personal skills;
-- mentorship preference and availability confirmation;
-- wallet address;
-- participation-terms acceptance;
-- final submission.
+Personal fields, wallet details, terms acceptance, and the final submit action remain applicant-owned actions and are intentionally not reproduced in this public repository.

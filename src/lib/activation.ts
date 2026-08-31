@@ -64,7 +64,7 @@ export function buildActivationPlan(
     evidenceSnapshot: {
       evidenceTier: agent.evidenceTier,
       evidenceScore: agent.evidenceScore,
-      endpointCheckedAt: service.checkedAt,
+      endpointCheckedAt: service.executionCheckedAt ?? service.checkedAt,
       registryCheckedAt: registryProof.checkedAt,
       registryBlockNumber: registryProof.blockNumber.toString(),
     },

@@ -11,7 +11,12 @@ flowchart LR
     C --> I[Receipt inspector]
     I --> RPC[BSC public RPC]
     RPC --> REG[Canonical ERC-8004 registry]
+    I --> CARD[Public A2A AgentCard]
+    CARD --> SAFE{HTTPS and same-origin checks}
+    SAFE -->|pass| CALL[Capability-only A2A message]
+    CALL --> BIND[Bind token, wallet, registry, and category skill]
     I --> G{Evidence gates}
+    BIND --> G
     G -->|pass| P[Read-only activation plan]
     G -->|fail| B[Blocked with exact reasons]
     UI --> A2A[Four first-party deterministic A2A references]
@@ -27,14 +32,15 @@ flowchart LR
 | `ownerOf(tokenId)` and `tokenURI(tokenId)` | Direct live chain read |
 | A2A/MCP discovery URL | Published metadata; not evidence that the execution target works |
 | Discovery health | Scanner observation that an AgentCard or MCP document is readable |
-| Domain verification | Scanner observation; required but not equivalent to an execution check |
-| Execution target | Must be resolved from discovery metadata and pass a bounded public-call check |
+| Domain verification | Scanner observation; useful evidence but not equivalent to an execution check |
+| Execution target | Resolved from the AgentCard; must be public HTTPS, same-origin, and pass a bounded call |
+| Execution identity | Response must repeat the selected canonical ERC-8004 token, wallet, registration, and category capability |
 | Wallet address | Published metadata; not proof of balance or authorization |
 | Returns, win rate, safety, and output quality | Never inferred; require separate task evidence |
 
 ## Ranking rationale
 
-Category relevance is deliberately separate from evidence quality. A highly relevant description can make an agent eligible for a category list, but it cannot produce an operational tier without registry, protocol, discovery-domain, execution-target, and wallet evidence.
+Category relevance is deliberately separate from evidence quality. A highly relevant description can make an agent eligible for a category list, but it cannot produce an operational tier without registry, protocol, healthy discovery, registry-bound execution, and wallet evidence.
 
 The score is explainable and capped at 100:
 
@@ -45,6 +51,7 @@ The score is explainable and capped at 100:
 - discovery health: up to 15;
 - verified discovery domain: 5;
 - validated execution target: 10;
+- registry-bound execution identity: 5;
 - metadata completeness: up to 10;
 - agent wallet: 5;
 - feedback volume: up to 5.
@@ -53,7 +60,9 @@ The UI presents the underlying facts and blocking reasons, not only the aggregat
 
 ## Activation boundary
 
-The current MVP generates a local read-only intent only after every evidence gate passes, including a fresh direct BSC owner read. It does not send the intent or move funds. A readable AgentCard alone never passes the gate. A real contest activation path should use an injected user wallet and the official BNB Agent SDK/ ERC-8183 contracts, with the final contract address, token, amount, allowance, expiry, and transaction simulation visible before signature.
+The current MVP sends one capability-only A2A message only after a fresh direct BSC owner read. The message contains no wallet, authentication, signature, funds, or transaction instruction. FourProof validates the returned token, agent wallet, canonical registration, and category capability before it generates a local read-only plan. A readable AgentCard alone never passes the gate.
+
+Any future paid or onchain path must remain a separate user-wallet flow with the contract address, token, amount, allowance, expiry, and transaction simulation visible before an explicit signature.
 
 ## Reference-agent boundary
 

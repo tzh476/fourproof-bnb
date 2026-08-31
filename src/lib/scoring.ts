@@ -18,7 +18,13 @@ export function categoryRelevance(agent: AgentDetail, category: AgentCategory): 
 
 export function strongestService(services: ServiceHealth[]): ServiceHealth | null {
   const order = { healthy: 4, degraded: 3, unknown: 2, skipped: 1, unhealthy: 0 } as const;
-  return [...services].sort((a, b) => order[b.status] - order[a.status])[0] ?? null;
+  const protocolPreference = (service: ServiceHealth): number => {
+    const name = normalized(service.name);
+    return name === "a2a" ? 2 : name === "mcp" ? 1 : 0;
+  };
+  return [...services].sort(
+    (a, b) => order[b.status] - order[a.status] || protocolPreference(b) - protocolPreference(a),
+  )[0] ?? null;
 }
 
 export function rankAgent(agent: AgentDetail, category: AgentCategory): RankedAgent {
@@ -33,13 +39,14 @@ export function rankAgent(agent: AgentDetail, category: AgentCategory): RankedAg
   const discoveryReachable = bestService?.status === "healthy" || bestService?.status === "degraded";
   const discoveryHealthy = bestService?.status === "healthy";
   const executionTargetVerified = bestService?.executionTargetVerified === true;
+  const executionIdentityVerified = bestService?.executionIdentityVerified === true;
 
   if (!onBsc) reasons.push("Identity is not confirmed on the canonical BSC registry");
   if (!callableProtocol) reasons.push("No A2A or MCP protocol is advertised");
   if (!bestService?.endpoint) reasons.push("No A2A or MCP discovery URL is published");
   if (!discoveryReachable) reasons.push("Published service metadata is not currently reachable");
-  if (bestService?.endpoint && !bestService.domainVerified) {
-    reasons.push("Discovery-domain ownership is not verified");
+  if (bestService?.endpoint && !bestService.domainVerified && !executionIdentityVerified) {
+    reasons.push("Neither domain ownership nor a registry-bound execution response is verified");
   }
   if (discoveryReachable && !executionTargetVerified) {
     reasons.push("The execution target has not passed a bounded public-call check");
@@ -53,6 +60,7 @@ export function rankAgent(agent: AgentDetail, category: AgentCategory): RankedAg
   evidenceScore += discoveryHealthy ? 15 : bestService?.status === "degraded" ? 8 : 0;
   evidenceScore += bestService?.domainVerified ? 5 : 0;
   evidenceScore += executionTargetVerified ? 10 : 0;
+  evidenceScore += executionIdentityVerified ? 5 : 0;
   evidenceScore += Math.min(10, agent.metadataCompleteness / 10);
   evidenceScore += agent.agentWallet ? 5 : 0;
   evidenceScore += Math.min(5, agent.totalFeedbacks);
@@ -65,8 +73,8 @@ export function rankAgent(agent: AgentDetail, category: AgentCategory): RankedAg
     onBsc &&
     discoveryHealthy &&
     callableProtocol &&
-    bestService?.domainVerified &&
     executionTargetVerified &&
+    executionIdentityVerified &&
     agent.agentWallet
   ) {
     evidenceTier = "operational";
@@ -82,9 +90,13 @@ export function rankAgent(agent: AgentDetail, category: AgentCategory): RankedAg
   };
 }
 
-export function rankAgents(agents: AgentDetail[], category: AgentCategory): RankedAgent[] {
+export function rankAgents(
+  agents: AgentDetail[],
+  category: AgentCategory,
+  explicitlyMatchedTokenIds: ReadonlySet<string> = new Set(),
+): RankedAgent[] {
   return agents
     .map((agent) => rankAgent(agent, category))
-    .filter((agent) => agent.relevanceScore > 0)
+    .filter((agent) => agent.relevanceScore > 0 || explicitlyMatchedTokenIds.has(agent.tokenId))
     .sort((a, b) => b.evidenceScore - a.evidenceScore || b.totalScore - a.totalScore);
 }

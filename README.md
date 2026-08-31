@@ -11,7 +11,7 @@ The differentiator is a strict trust boundary. Agent descriptions are treated as
 
 ## Current status
 
-This is a working MVP with public source at `https://github.com/tzh476/fourproof-bnb` and a live demo at `https://fourproof-bnb.pages.dev`. It has not been registered as a hackathon submission, connected to a user wallet, registered as an ERC-8004 identity, or awarded any prize. USD 0 has been received.
+This is a working MVP with public source at `https://github.com/tzh476/fourproof-bnb` and a live demo at `https://fourproof-bnb.pages.dev`. A project-bearing Google Forms submission receipt has been verified. That receipt is not a shortlist, award, or payment; USD 0 has been received.
 
 Implemented:
 
@@ -20,16 +20,17 @@ Implemented:
 - schema validation at the external API boundary;
 - direct `ownerOf` and `tokenURI` verification against the canonical ERC-8004 registry;
 - transparent discovery-health, execution-target, and activation-blocking reasons;
-- bounded, read-only activation-plan generation that moves no funds and sends no messages;
+- a bounded live A2A probe that sends no wallet, credential, signature, or funds;
+- registry-bound response validation against the selected ERC-8004 token and published wallet;
+- read-only activation-plan generation only after the BSC owner and live response gates pass;
 - four deterministic, first-party A2A reference endpoints for non-financial category demos;
 - responsive marketplace UI and deterministic unit tests.
 
-Still required before a truthful contest submission:
+Remaining work to strengthen the entry:
 
-- resolve and validate real public A2A execution targets, then add a user-confirmed ERC-8183 activation path without exposing private keys;
-- complete wallet-owned onchain actions and any testnet/mainnet transactions;
-- record a demo video;
-- have the applicant personally accept the contest terms and submit the form.
+- repeat the registry-bound execution path in more than one category when suitable public agents exist;
+- preserve the current no-wallet/no-transaction boundary unless a separately reviewed flow genuinely needs a user signature;
+- prepare current judging collateral if the organizer asks for an updated demo or video.
 
 ## Run locally
 
@@ -53,7 +54,7 @@ The evidence tier is intentionally monotonic:
 metadata-only
   -> registered (canonical BSC ERC-8004 identity)
   -> reachable (A2A/MCP plus healthy or degraded discovery metadata)
-  -> operational (verified discovery domain, bounded execution-target check, and published agent wallet)
+  -> operational (bounded execution response bound to the ERC-8004 token and published agent wallet)
 ```
 
 An onchain identity is not proof of safety, profitability, or correct output. FourProof never turns a description, token registration, or high self-reported score into an endorsement.
@@ -66,7 +67,7 @@ An onchain identity is not proof of safety, profitability, or correct output. Fo
 
 The browser never receives an API credential. Local Vite development proxies the allowlisted read routes, and `functions/api/8004scan/[[path]].ts` provides the same route shape for Cloudflare Pages. The proxy accepts only agent-list queries on chain 56 and numeric BSC agent-detail paths.
 
-A marketplace refresh makes at most 24 upstream requests: one focused search and up to five detail reads for each category. This stays below the current unauthenticated 30-request-per-minute limit and avoids silently dropping later categories.
+A marketplace refresh makes at most 16 upstream requests: one focused search and up to three detail reads for each category. This stays below the current unauthenticated 30-request-per-minute limit and matches the three cards rendered per category.
 
 ## First-party A2A reference suite
 
@@ -88,7 +89,8 @@ They are publicly deployed under `https://fourproof-bnb.pages.dev/agents/`, but 
 ## Security and financial boundary
 
 - No seed phrase, private key, wallet password, or payment credential belongs in this project.
-- The MVP does not send transactions or agent messages.
-- Activation plans are local JSON with read-only, no-custody, and no-trading controls. They require both a fresh BSC owner proof and a separately validated execution target.
+- The MVP does not send transactions. Its only external activation action is a capability-only A2A message with no wallet, authentication, signature, or funds.
+- The live probe accepts only public HTTPS, same-origin AgentCard/execution targets and rejects local, IP-literal, plaintext, cross-origin, oversized, or identity-mismatched responses.
+- Activation plans are local JSON with read-only, no-custody, and no-trading controls. They require both a fresh BSC owner proof and a registry-bound execution response.
 - A future transaction path must use an injected user wallet, display chain/contract/amount/expiry, and require an explicit user signature.
 - This project does not claim that any surfaced agent is safe or profitable.

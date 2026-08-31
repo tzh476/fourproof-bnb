@@ -132,6 +132,13 @@ footer { padding: 25px 6vw; display: flex; justify-content: space-between; gap: 
 textarea { width: 100%; min-height: 108px; padding: 12px; resize: vertical; color: #eef4ee; background: #0d120f; border: 1px solid var(--line); border-radius: 7px; outline: none; line-height: 1.5; }
 textarea:focus { border-color: var(--green); }
 .receipt-block > .primary-button { width: 100%; margin-top: 12px; }
+.wide-button { width: 100%; margin-top: 12px; }
+.wide-button:disabled { color: #6f7c75; cursor: not-allowed; opacity: 0.7; }
+.probe-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.execution-receipt { margin-top: 14px; padding: 14px; color: #dce9e1; background: rgba(94, 225, 162, 0.06); border: 1px solid rgba(94, 225, 162, 0.25); border-radius: 7px; }
+.execution-receipt > strong { color: var(--green); font: 600 12px/1.4 "Space Grotesk", sans-serif; }
+.execution-receipt > p { margin: 9px 0 0; color: #afc0b6; font-size: 11px; line-height: 1.55; }
+.compact-receipt { margin-bottom: 0; }
 .blocked-box { margin-top: 14px; padding: 14px; color: #d5c49a; background: rgba(239, 200, 109, 0.06); border: 1px solid rgba(239, 200, 109, 0.2); border-radius: 7px; font-size: 12px; }
 .blocked-box ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.6; }
 .plan-preview { max-height: 340px; overflow: auto; margin-top: 14px; padding: 14px; color: #a8d8bf; background: #090d0b; border: 1px solid var(--line); border-radius: 7px; font: 400 10px/1.6 "DM Mono", monospace; white-space: pre-wrap; word-break: break-word; }

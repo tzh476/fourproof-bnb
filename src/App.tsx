@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { buildActivationPlan, type ActivationPlan } from "./lib/activation";
 import { fetchMarketplace } from "./lib/api";
 import { categoryDefinitions } from "./lib/categories";
+import {
+  applyExecutionReceipt,
+  runBoundedA2AProbe,
+  type ExecutionReceipt,
+} from "./lib/execution";
 import { bscScanTokenUrl, bscScanTransactionUrl, verifyRegistryProof } from "./lib/onchain";
 import { strongestService } from "./lib/scoring";
 import type { AgentCategory, CategoryResult, RankedAgent, RegistryProof } from "./lib/types";
@@ -64,8 +69,8 @@ function AgentCard({
           state={agent.supportedProtocols.length ? "plain" : "bad"}
         />
         <EvidencePill
-          label={service ? `AgentCard ${service.status}` : "No service metadata"}
-          state={endpointState}
+          label={service?.executionIdentityVerified ? "Execution live" : service ? `AgentCard ${service.status}` : "No service metadata"}
+          state={service?.executionIdentityVerified ? "good" : endpointState}
         />
         {agent.x402Supported && <EvidencePill label="x402" state="plain" />}
       </div>
@@ -126,21 +131,38 @@ function CategorySection({ result, onSelect }: { result: CategoryResult; onSelec
   );
 }
 
-function Inspector({ agent, onClose }: { agent: RankedAgent; onClose: () => void }) {
+function Inspector({
+  agent,
+  onClose,
+  onAgentUpdate,
+}: {
+  agent: RankedAgent;
+  onClose: () => void;
+  onAgentUpdate: (agent: RankedAgent) => void;
+}) {
   const [proof, setProof] = useState<RegistryProof | null>(null);
   const [proofError, setProofError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [objective, setObjective] = useState("Compare this agent's read-only recommendation with current onchain data.");
+  const [executionReceipt, setExecutionReceipt] = useState<ExecutionReceipt | null>(null);
+  const [probeError, setProbeError] = useState<string | null>(null);
+  const [probing, setProbing] = useState(false);
   const [plan, setPlan] = useState<ActivationPlan | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
-  const service = strongestService(agent.services);
+  const activationAgent = useMemo(
+    () => executionReceipt ? applyExecutionReceipt(agent, executionReceipt) : agent,
+    [agent, executionReceipt],
+  );
+  const service = strongestService(activationAgent.services);
 
   useEffect(() => {
     setProof(null);
     setProofError(null);
+    setExecutionReceipt(null);
+    setProbeError(null);
     setPlan(null);
     setPlanError(null);
-  }, [agent.tokenId]);
+  }, [agent.tokenId, agent.category]);
 
   async function verify() {
     setVerifying(true);
@@ -157,10 +179,27 @@ function Inspector({ agent, onClose }: { agent: RankedAgent; onClose: () => void
   function generatePlan() {
     setPlanError(null);
     try {
-      setPlan(buildActivationPlan(agent, objective, proof));
+      setPlan(buildActivationPlan(activationAgent, objective, proof));
     } catch (error) {
       setPlan(null);
       setPlanError(error instanceof Error ? error.message : "Activation plan could not be created");
+    }
+  }
+
+  async function probeExecution() {
+    setProbing(true);
+    setProbeError(null);
+    setPlan(null);
+    try {
+      const receipt = await runBoundedA2AProbe(agent);
+      const upgraded = applyExecutionReceipt(agent, receipt);
+      setExecutionReceipt(receipt);
+      onAgentUpdate(upgraded);
+    } catch (error) {
+      setExecutionReceipt(null);
+      setProbeError(error instanceof Error ? error.message : "Bounded A2A probe failed");
+    } finally {
+      setProbing(false);
     }
   }
 
@@ -208,7 +247,7 @@ function Inspector({ agent, onClose }: { agent: RankedAgent; onClose: () => void
           <dl className="receipt-list">
             <div><dt>Protocol</dt><dd>{agent.supportedProtocols.join(", ") || "None"}</dd></div>
             <div><dt>Discovery URL</dt><dd>{service?.endpoint ? new URL(service.endpoint).hostname : "Not published"}</dd></div>
-            <div><dt>Domain proof</dt><dd>{service?.domainVerified ? "verified" : "not verified"}</dd></div>
+            <div><dt>Origin binding</dt><dd>{service?.domainVerified ? "scanner owner proof" : service?.executionIdentityVerified ? "same-origin registry bind" : "not verified"}</dd></div>
             <div><dt>Execution target</dt><dd>{service?.executionTargetVerified ? "bounded check passed" : "not validated"}</dd></div>
             <div><dt>Status</dt><dd>{service?.status ?? "unknown"}</dd></div>
             <div><dt>Last check</dt><dd>{timeAgo(service?.checkedAt ?? null)}</dd></div>
@@ -224,24 +263,44 @@ function Inspector({ agent, onClose }: { agent: RankedAgent; onClose: () => void
         <div className="receipt-block">
           <div className="receipt-heading">
             <span>03</span>
-            <div><strong>Bounded activation</strong><small>No custody, trade, or message is sent here</small></div>
+            <div><strong>Bounded activation</strong><small>One capability-only message; no wallet, custody, or trade</small></div>
           </div>
           <label className="field-label" htmlFor="objective">Read-only objective</label>
           <textarea id="objective" value={objective} maxLength={500} onChange={(event) => setObjective(event.target.value)} />
           <button
+            className="secondary-button wide-button"
+            onClick={() => void probeExecution()}
+            disabled={probing || !proof?.verified || service?.status !== "healthy" || service?.name.toLowerCase() !== "a2a"}
+          >
+            {probing ? "Calling public A2A endpoint…" : service?.executionIdentityVerified ? "Run live probe again" : "Run read-only live probe"}
+          </button>
+          {!proof?.verified && <p className="probe-note">First verify the live BSC owner. The probe sends no wallet address, credentials, signature, or funds.</p>}
+          {probeError && <p className="status-bad">{probeError}</p>}
+          {executionReceipt && (
+            <div className="execution-receipt">
+              <strong>Live response bound to ERC-8004 #{executionReceipt.agentTokenId}</strong>
+              <p>{executionReceipt.responseSummary}</p>
+              <dl className="receipt-list compact-receipt">
+                <div><dt>Remote message</dt><dd>{executionReceipt.remoteMessageId}</dd></div>
+                <div><dt>Execution host</dt><dd>{new URL(executionReceipt.executionEndpoint).hostname}</dd></div>
+                <div><dt>Checked</dt><dd>{timeAgo(executionReceipt.checkedAt)}</dd></div>
+              </dl>
+            </div>
+          )}
+          <button
             className="primary-button"
             onClick={generatePlan}
-            disabled={agent.activationBlockedReasons.length > 0 || !proof?.verified}
+            disabled={activationAgent.activationBlockedReasons.length > 0 || !proof?.verified}
           >
             Generate activation plan
           </button>
-          {agent.activationBlockedReasons.length > 0 && (
+          {activationAgent.activationBlockedReasons.length > 0 && (
             <div className="blocked-box">
               <strong>Activation blocked</strong>
-              <ul>{agent.activationBlockedReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+              <ul>{activationAgent.activationBlockedReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
             </div>
           )}
-          {agent.activationBlockedReasons.length === 0 && !proof?.verified && (
+          {activationAgent.activationBlockedReasons.length === 0 && !proof?.verified && (
             <p className="status-bad">Verify the live BSC owner before generating a plan.</p>
           )}
           {planError && <p className="status-bad">{planError}</p>}
@@ -273,6 +332,16 @@ export default function App() {
   useEffect(() => {
     void load();
   }, []);
+
+  function updateAgent(updated: RankedAgent) {
+    setResults((current) => current.map((result) => ({
+      ...result,
+      agents: result.agents.map((agent) =>
+        agent.category === updated.category && agent.tokenId === updated.tokenId ? updated : agent,
+      ),
+    })));
+    setSelected(updated);
+  }
 
   const stats = useMemo(() => {
     const agents = results.flatMap((result) => result.agents);
@@ -307,7 +376,7 @@ export default function App() {
             <p className="eyebrow">BNB Agent Studio marketplace concept</p>
             <h1>Find the agent.<br />Check the receipts.</h1>
             <p className="hero-lede">
-              Live BSC identity, discovery health, protocol support, and execution gates—before an agent gets near a wallet.
+              Live BSC identity, discovery health, and a registry-bound A2A probe—before an agent gets near a wallet.
             </p>
             <div className="hero-actions">
               <a className="primary-button" href="#rebalancing">Browse four categories</a>
@@ -330,7 +399,7 @@ export default function App() {
           <div><span>01</span><strong>Discover</strong><small>Search all four required categories</small></div>
           <div><span>02</span><strong>Verify</strong><small>Read registry and discovery evidence</small></div>
           <div><span>03</span><strong>Gate</strong><small>Block untested targets or wallets</small></div>
-          <div><span>04</span><strong>Activate</strong><small>Generate a bounded, read-only plan</small></div>
+          <div><span>04</span><strong>Activate</strong><small>Call once, bind the response, then plan</small></div>
         </section>
 
         {error && (
@@ -369,7 +438,7 @@ export default function App() {
         <span>Built for The Smart Money Era · USD 0 received</span>
       </footer>
 
-      {selected && <Inspector agent={selected} onClose={() => setSelected(null)} />}
+      {selected && <Inspector agent={selected} onClose={() => setSelected(null)} onAgentUpdate={updateAgent} />}
     </div>
   );
 }

@@ -10,7 +10,12 @@ import type {
 } from "./types";
 
 const API_BASE = "/api/8004scan";
-const REQUEST_TIMEOUT_MS = 8_000;
+const REQUEST_TIMEOUT_MS = 15_000;
+const activationCandidateIds: Partial<Record<AgentCategory, string[]>> = {
+  // The live AgentCard for #120305 advertises market-cap index and portfolio skills.
+  // Keeping it in the bounded detail set makes the end-to-end A2A path testable.
+  rebalancing: ["120305"],
+};
 
 const addressSchema = z.string().regex(/^0x[0-9a-fA-F]{40}$/);
 const txHashSchema = z.string().regex(/^0x[0-9a-fA-F]{64}$/);
@@ -115,6 +120,8 @@ function toDetail(raw: z.infer<typeof detailSchema>): AgentDetail {
     endpoint: serviceEndpoint(raw.services, name),
     executionEndpoint: null,
     executionTargetVerified: false,
+    executionIdentityVerified: false,
+    executionCheckedAt: null,
     status: normalizeServiceStatus(health.status),
     message: health.message,
     checkedAt: health.checked_at,
@@ -128,6 +135,8 @@ function toDetail(raw: z.infer<typeof detailSchema>): AgentDetail {
         endpoint: serviceEndpoint(raw.services, name),
         executionEndpoint: null,
         executionTargetVerified: false,
+        executionIdentityVerified: false,
+        executionCheckedAt: null,
         status: "unknown",
         message: null,
         checkedAt: null,
@@ -170,8 +179,8 @@ function summaryRelevance(agent: AgentSummary, category: AgentCategory): number 
 export async function fetchCategory(category: AgentCategory): Promise<CategoryResult> {
   const definition = categoryDefinitions[category];
   // The public API allows 30 requests/minute. One focused discovery query plus
-  // at most five detail reads per category keeps a full four-category refresh
-  // below that ceiling (24 calls) without an API key.
+  // at most three detail reads per category keeps a full four-category refresh
+  // to 16 calls and matches the three cards the UI actually renders.
   const searches = await Promise.allSettled(definition.searches.slice(0, 1).map(fetchSearch));
   const unique = new Map<string, AgentSummary>();
 
@@ -185,12 +194,12 @@ export async function fetchCategory(category: AgentCategory): Promise<CategoryRe
     throw new Error(`No live agents returned for ${definition.label}`);
   }
 
-  const detailResults = await Promise.allSettled(
-    [...unique.values()]
-      .sort((a, b) => summaryRelevance(b, category) - summaryRelevance(a, category))
-      .slice(0, 5)
-      .map((agent) => fetchDetail(agent.tokenId)),
-  );
+  const preferredIds = activationCandidateIds[category] ?? [];
+  const prioritized = [...unique.values()].sort((a, b) => {
+    const preferredDelta = Number(preferredIds.includes(b.tokenId)) - Number(preferredIds.includes(a.tokenId));
+    return preferredDelta || summaryRelevance(b, category) - summaryRelevance(a, category);
+  });
+  const detailResults = await Promise.allSettled(prioritized.slice(0, 3).map((agent) => fetchDetail(agent.tokenId)));
   const details = detailResults
     .filter((result): result is PromiseFulfilledResult<AgentDetail> => result.status === "fulfilled")
     .map((result) => result.value);
@@ -201,7 +210,7 @@ export async function fetchCategory(category: AgentCategory): Promise<CategoryRe
 
   return {
     category: definition,
-    agents: rankAgents(details, category).slice(0, 8),
+    agents: rankAgents(details, category, new Set(preferredIds)).slice(0, 3),
     fetchedAt: new Date().toISOString(),
     source: "live",
     warning: searches.some((result) => result.status === "rejected")

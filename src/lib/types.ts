@@ -42,6 +42,10 @@ export interface ServiceHealth {
   executionEndpoint: string | null;
   /** True only after a bounded request to executionEndpoint succeeds. */
   executionTargetVerified: boolean;
+  /** True only when the bounded response binds back to this ERC-8004 token and wallet. */
+  executionIdentityVerified: boolean;
+  /** Client-observed time of the latest bounded execution check. */
+  executionCheckedAt: string | null;
   status: "healthy" | "degraded" | "unhealthy" | "skipped" | "unknown";
   message: string | null;
   checkedAt: string | null;
